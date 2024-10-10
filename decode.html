@@ -153,11 +153,12 @@
                     if (code) {
 
 
-                        let inputString = code.data;
-                        let lastDigit = inputString.charAt(inputString.length - 1);
-                        
-                        console.log(inputString);
-                        console.log(lastDigit);
+                        let inputString = code.data; // QR_1728593203358_10
+                        let parts = inputString.split('_'); // Split the string by underscore
+                        let lastPart = parts[parts.length - 1]; // Get the last part which should be '10'
+
+                        console.log(inputString); // QR_1728593203358_10
+                        console.log(lastPart); // 10
                         console.log(index)
                         if(parseInt(lastDigit)==index){
 
