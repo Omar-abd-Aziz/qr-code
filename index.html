@@ -179,20 +179,20 @@
   import {docName,getAggregateFromServer,sum,onAuthStateChanged, getAuth, initializeApp,firebaseConfig, getFirestore,getCountFromServer, collection, query, where, getDocs,getDoc, setDoc, updateDoc, addDoc, doc,deleteDoc,onSnapshot,orderBy, limit,startAt,endAt } from './firebase.js';
 
   firebase.initializeApp(firebaseConfig);
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
+  let app = initializeApp(firebaseConfig);
+  let auth = getAuth(app);
 
-  const db = getFirestore(app);
+  let db = getFirestore(app);
 
-  const storage = firebase.storage();
+  let storage = firebase.storage();
   /**/
 
   let X;
 
   async function getCit(db,X) {
-  const citiesCol = collection(db,`${X}`);
-  const citySnapshot = await getDocs(citiesCol);
-  const cityList = citySnapshot.docs.map(doc => doc.data());
+  let citiesCol = collection(db,`${X}`);
+  let citySnapshot = await getDocs(citiesCol);
+  let cityList = citySnapshot.docs.map(doc => doc.data());
   return cityList;
   };
 
@@ -206,9 +206,9 @@
 
 // async function forAllOrders(X){
 
-//   const q = query(collection(db, "Persons"), where('isAccepted', '==', isAccepted), orderBy("date","desc"), limit(X||5));
-//   const querySnapshot = await getDocs(q);
-//   const cityList = querySnapshot.docs.map(doc => doc.data());
+//   let q = query(collection(db, "Persons"), where('isAccepted', '==', isAccepted), orderBy("date","desc"), limit(X||5));
+//   let querySnapshot = await getDocs(q);
+//   let cityList = querySnapshot.docs.map(doc => doc.data());
 
 //   AllOrders=cityList;
 
@@ -272,7 +272,7 @@ if(docId!==null&&docId.trim()!==''){
         AllOrders=cityList||[];
         console.log(AllOrders);
 
-        const largestSerialNumber = AllOrders
+        let largestSerialNumber = AllOrders
         .filter(item => item.serialNumber !== undefined) // Filter items with serialNumber
         .reduce((max, item) => Math.max(max, item.serialNumber), -Infinity); // Reduce to find the maximum
 
@@ -305,57 +305,65 @@ if(docId!==null&&docId.trim()!==''){
 
 
 
-        const secretKey = 'مفتاح_سري_يجب_حمايته';
+        let secretKey = 'مفتاح_سري_يجب_حمايته';
         let currentCount = 100; // العدد الحالي للخانات
     
         function createQRForm(index) {
-            const container = document.createElement('div');
+            let container = document.createElement('div');
             container.classList.add('qr-container');
-            container.dataset.id=index + 1;
+            container.dataset.id=index ;
 
-            const serialNumberDiv = document.createElement('div');
+            let serialNumberDiv = document.createElement('div');
             serialNumberDiv.classList.add('serial-number');
-            serialNumberDiv.textContent = index + 1;
+            serialNumberDiv.textContent = index ;
             container.appendChild(serialNumberDiv);
     
-            const inputField = document.createElement('input');
+            let inputField = document.createElement('input');
             inputField.type = 'text';
             inputField.classList.add('inputNumber');
-            inputField.placeholder = `أدخل رقم الكرت ${index + 1}`;
+            inputField.placeholder = `أدخل رقم الكرت ${index}`;
             container.appendChild(inputField);
     
-            const canvas = document.createElement('canvas');
+            let canvas = document.createElement('canvas');
             canvas.classList.add('qrCanvas');
             canvas.style.margin = '10px 0';
-            canvas.style.width = '100px';
-            canvas.style.height = '100px';
+            // canvas.style.width = '100px';
+            // canvas.style.height = '100px';
             container.appendChild(canvas);
+
+            let img = document.createElement('img');
+            img.dataset.id=index ;
+            img.classList.add('qrImg');
+            img.style.margin = '10px 0';
+            img.style.display = 'none';
+            // canvas.style.height = '100px';
+            container.appendChild(img);
     
-            const associatedNumberDiv = document.createElement('div');
+            let associatedNumberDiv = document.createElement('div');
             associatedNumberDiv.classList.add('associatedNumber');
-            associatedNumberDiv.id = `associatedNumber_${index+1}`;
+            associatedNumberDiv.id = `associatedNumber_${index}`;
             container.appendChild(associatedNumberDiv);
     
-            const generateButton = document.createElement('button');
+            let generateButton = document.createElement('button');
             generateButton.classList.add('generateQRCode');
             generateButton.dataset.index = index;
             generateButton.textContent = 'تشفير إلى QR';
             generateButton.addEventListener('click', generateQRCode);
             container.appendChild(generateButton);
     
-            const decodeButton = document.createElement('button');
+            let decodeButton = document.createElement('button');
             decodeButton.classList.add('decode-button');
-            decodeButton.id = `decodeLink_${index+1}`;
+            decodeButton.id = `decodeLink_${index}`;
             decodeButton.style.display = 'none';
             decodeButton.textContent = 'فك التشفير';
-            decodeButton.onclick = () => window.open(`decode.html?index=${index+1}`, '_blank');
+            decodeButton.onclick = () => window.open(`decode.html?index=${index}`, '_blank');
             container.appendChild(decodeButton);
     
             document.getElementById('qrFormsContainer').appendChild(container);
         }
     
         // إنشاء 100 نموذج ابتدائي
-        for (let i = 0; i < currentCount; i++) {
+        for (let i = 1; i < currentCount; i++) {
             createQRForm(i);
         }
     
@@ -374,10 +382,10 @@ if(docId!==null&&docId.trim()!==''){
         async function saveQRCodeDataToFirestore(serialNumber, cardNumber, associatedNumber, qrDataURL,uniqueID,encrypted) {
             try {
                 // Create a reference to the Firestore document (each card entry as a document)
-                const docRef = doc(db, "cardData", `card_${serialNumber}`); // "cardData" is the collection
+                let docRef = doc(db, "cardData", `card_${serialNumber}`); // "cardData" is the collection
 
                 // Data to be saved
-                const qrData = {
+                let qrData = {
                     serialNumber: serialNumber,
                     cardNumber: cardNumber,
                     associatedNumber: associatedNumber,
@@ -405,15 +413,13 @@ if(docId!==null&&docId.trim()!==''){
         function generateQRCode(event) {
 
 
-
-   
-
-            const index = event.target.dataset.index;
-            const inputField = document.querySelectorAll('.inputNumber')[index];
-            const input = inputField.value.trim();
+            let index = event.target.dataset.index;
+            console.log(index)
+            let inputField = document.querySelectorAll('.inputNumber')[index-1];
+            let input = inputField.value.trim();
 
             if (input === '') {
-                alert(`يرجى إدخال رقم الكرت في النموذج ${parseInt(index) + 1}`);
+                alert(`يرجى إدخال رقم الكرت في النموذج ${parseInt(index)}`);
                 return;
             }
 
@@ -427,9 +433,9 @@ if(docId!==null&&docId.trim()!==''){
             event.target.disabled = true;
             event.target.textContent = 'تم إنشاء QR';
 
-            const associatedNumber = Math.floor(Math.random() * 100000);
-            const uniqueID = 'QR_' + Date.now() + '_' + (Number(index)+1);
-            const encrypted = CryptoJS.AES.encrypt(input + '|' + associatedNumber, secretKey).toString();
+            let associatedNumber = Math.floor(Math.random() * 100000);
+            let uniqueID = 'QR_' + Date.now() + '_' + (Number(index));
+            let encrypted = CryptoJS.AES.encrypt(input + '|' + associatedNumber, secretKey).toString();
 
             console.log(associatedNumber)
             console.log(uniqueID)
@@ -438,8 +444,8 @@ if(docId!==null&&docId.trim()!==''){
             // localStorage.setItem(uniqueID, encrypted);
             // localStorage.setItem(`associatedNumber_${index}`, associatedNumber);
 
-            const qrCanvas = document.querySelectorAll('.qrCanvas')[index];
-            const qr = new QRious({
+            let qrCanvas = document.querySelectorAll('.qrCanvas')[index-1];
+            let qr = new QRious({
                 element: qrCanvas,
                 value: uniqueID
             });
@@ -447,11 +453,11 @@ if(docId!==null&&docId.trim()!==''){
             document.getElementById(`associatedNumber_${index}`).textContent = `رقم متلازم: ${associatedNumber}`;
             document.getElementById(`decodeLink_${index}`).style.display = 'block';
 
-            const qrDataURL = qr.toDataURL();
-            addDataToTable(parseInt(index) + 1, input, associatedNumber, qrDataURL);
+            let qrDataURL = qr.toDataURL();
+            addDataToTable(parseInt(index), input, associatedNumber, qrDataURL);
 
             // Save to Firestore
-            saveQRCodeDataToFirestore(parseInt(index) + 1, input, associatedNumber, qrDataURL,uniqueID,encrypted);
+            saveQRCodeDataToFirestore(parseInt(index), input, associatedNumber, qrDataURL,uniqueID,encrypted);
         }
 
 
@@ -470,8 +476,8 @@ if(docId!==null&&docId.trim()!==''){
     
      
         function addDataToTable(serialNumber, cardNumber, associatedNumber, qrDataURL) {
-            const table = document.querySelector('#storageTable tbody');
-            const row = document.createElement('tr');
+            let table = document.querySelector('#storageTable tbody');
+            let row = document.createElement('tr');
             row.dataset.index = serialNumber - 1;
     
             row.innerHTML = `
@@ -490,18 +496,18 @@ if(docId!==null&&docId.trim()!==''){
         }
     
         function sortTable() {
-            const table = document.querySelector('#storageTable tbody');
-            const rows = Array.from(table.rows);
+            let table = document.querySelector('#storageTable tbody');
+            let rows = Array.from(table.rows);
             rows.sort((a, b) => parseInt(b.cells[0].textContent) - parseInt(a.cells[0].textContent));
             rows.forEach(row => table.appendChild(row));
         }
     
         document.getElementById('searchButton').addEventListener('click', function() {
-            const searchTerm = document.getElementById('searchInput').value.trim();
+            let searchTerm = document.getElementById('searchInput').value.trim();
             document.querySelectorAll('#storageTable tbody tr').forEach(row => {
-                const associatedNumber = row.cells[2].textContent;
-                const cardNumber = row.cells[1].textContent;
-                const serialNumber = row.cells[0].textContent;
+                let associatedNumber = row.cells[2].textContent;
+                let cardNumber = row.cells[1].textContent;
+                let serialNumber = row.cells[0].textContent;
     
                 if (associatedNumber === searchTerm || cardNumber === searchTerm || serialNumber === searchTerm) {
                     row.style.display = '';
@@ -523,7 +529,7 @@ if(docId!==null&&docId.trim()!==''){
         });
     
         document.getElementById('searchByIndexButton').addEventListener('click', function() {
-            const index = parseInt(document.getElementById('indexInput').value.trim());
+            let index = parseInt(document.getElementById('indexInput').value.trim());
             document.querySelectorAll('#storageTable tbody tr').forEach(row => row.style.display = 'none');
             if (index >= 0 && index < currentCount) {
                 document.querySelector(`#storageTable tbody tr[data-index="${index}"]`).style.display = '';
@@ -531,7 +537,7 @@ if(docId!==null&&docId.trim()!==''){
         });
     
         document.getElementById('toggleQRFormsButton').addEventListener('click', function() {
-            const qrFormsContainer = document.getElementById('qrFormsContainer');
+            let qrFormsContainer = document.getElementById('qrFormsContainer');
             qrFormsContainer.style.display = qrFormsContainer.style.display === 'none' ? '' : 'none';
         });
 
@@ -549,20 +555,31 @@ if(docId!==null&&docId.trim()!==''){
 
                 let cardDiv = document.querySelector(`[data-id="${item.serialNumber}"]`);
 
-                const img = new Image();
+                let img = new Image();
         
                 // Set the source of the image
                 img.src = item.qrCode; // Replace with your image URL
-
+                console.log(item.qrCode)
                 // Get the canvas element
                 let canvas =  cardDiv.querySelector(".qrCanvas");
- 
-                let ctx = canvas.getContext('2d');
+                canvas.style.display="none"
+                console.log(canvas)
 
-                // Draw the image onto the canvas once it has loaded
-                img.onload = function() {
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height); // Draw image at (0,0)
-                };
+
+                cardDiv.querySelector(".qrImg").src=item.qrCode;
+                cardDiv.querySelector(".qrImg").style.display="block";
+
+                
+ 
+                // let ctx = canvas.getContext('2d');
+
+                // img.onload = function() {
+                //     // Clear the canvas before drawing
+                //     ctx.clearRect(0, 0, "100px", "100px");
+
+                //     // Draw the image on the canvas at (0, 0) with a size of 100x100
+                //     ctx.drawImage(img, 0, 0, 100, 100);
+                // };
 
                 cardDiv.querySelector(".associatedNumber").textContent=`رقم متلازم: ${item.associatedNumber}`;
                 cardDiv.querySelector(".inputNumber").style.display="none";
