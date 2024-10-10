@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <title>KN مفتاح فك التشفير لكرت رصيد الحساب البنكي الالكتروني</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://unpkg.com/jsqr/dist/jsQR.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script>
+    <style>
+        body {
+            background-color: #333;
+            background-image: url('https://www.transparenttextures.com/patterns/asfalt-light.png');
+            background-size: 150px; /* الحجم المناسب للخلفية */
+            background-repeat: repeat; /* تكرار الخلفية */
+            font-family: Arial, sans-serif;
+            color: #f9f9f9;
+            text-align: center;
+            padding: 10px;
+            margin: 0;
+        }
+        h1 {
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        button {
+            background-color: #FFD700;
+            color: #000;
+            border: none;
+            border-radius: 25px;
+            padding: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 10px;
+            transition: background-color 0.3s ease;
+            width: calc(100% - 20px);
+        }
+        button:hover {
+            background-color: #FFC700;
+        }
+        #output {
+            margin-top: 0.01px;
+            font-size: 1.2em;
+        }
+        .cardNumber {
+            color: #ffffff;
+            font-weight: bold;
+            font-size: 1.5em;
+        }
+        .reviewNumber {
+            color: #f9f9f9;
+            font-size: 1em;
+            margin-top: 10px;
+        }
+        .errorMessage {
+            color: red;
+            font-weight: bold;
+            margin-top: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>KN مفتاح فك التشفير لكرت الحساب البنكي الالكتروني</h1>
+    <div>
+        <p id="serialNumber"></p>
+        <input type="file" id="uploadQRCode" style="display:none;">
+        <bdi>لفك التشفير، امسح QR كود بالكاميرا أو قم برفع صورته.</bdi>
+        <button id="uploadButton">للكرت المراد فك تشفيره QR-code رفع صورة</button>
+        <button id="startCamera">بالكاميرا QR-code مسح</button>
+        <video id="video" style="display:none;"></video>
+        <canvas id="canvas" style="display:none;"></canvas>
+        <button id="captureQRCode" style="display:none;">بالكاميرا QR-code التقاط</button>
+        <p id="output"></p>
+        <p id="output2"></p>
+    </div>
+
+    
+</body>
+
+
+    
+<script src="./js cdn/swalCdn.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/7.7.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/7.7.0/firebase-storage.js"></script>
+<script src="https://www.gstatic.com/firebasejs/7.7.0/firebase-database.js"></script>
+
+<script type="module">
+
+
+  /**/
+  import {docName,getAggregateFromServer,sum,onAuthStateChanged, getAuth, initializeApp,firebaseConfig, getFirestore,getCountFromServer, collection, query, where, getDocs,getDoc, setDoc, updateDoc, addDoc, doc,deleteDoc,onSnapshot,orderBy, limit,startAt,endAt } from './firebase.js';
+
+  firebase.initializeApp(firebaseConfig);
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+
+  const db = getFirestore(app);
+
+  const storage = firebase.storage();
+  /**/
+
+  let X;
+
+  async function getCit(db,X) {
+  const citiesCol = collection(db,`${X}`);
+  const citySnapshot = await getDocs(citiesCol);
+  const cityList = citySnapshot.docs.map(doc => doc.data());
+  return cityList;
+  };
+
+
+
+
+
+  const secretKey = 'مفتاح_سري_يجب_حمايته';
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const index = urlParams.get('index');
+        const serialNumber = parseInt(index);
+
+        document.getElementById('serialNumber').textContent = `الرقم التسلسلي: ${serialNumber}`;
+
+        document.getElementById('uploadButton').addEventListener('click', function() {
+            document.getElementById('uploadQRCode').click();
+        });
+
+        document.getElementById('uploadQRCode').addEventListener('change', function() {
+            const file = this.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                const imageData = e.target.result;
+                const image = new Image();
+
+                image.onload = async function() {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = image.width;
+                    canvas.height = image.height;
+                    const context = canvas.getContext('2d');
+                    context.drawImage(image, 0, 0,100,100,0,0,100,100);
+                    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                    const code = jsQR(imageData.data, canvas.width, canvas.height);
+
+
+                    if (code) {
+
+
+                        let inputString = code.data;
+                        let lastDigit = inputString.charAt(inputString.length - 1);
+                        
+                        console.log(inputString);
+                        console.log(lastDigit);
+                        console.log(index)
+                        if(parseInt(lastDigit)==index){
+
+                            
+                            
+                            let q = query(collection(db, "cardData"),where("uniqueID","==",`${code.data}`));
+                            let querySnapshot = await getDocs(q);
+                            let cityList = querySnapshot.docs.map(doc => doc.data());
+    
+                            if(cityList.length>0){
+                                console.log(cityList[0].cardNumber)
+    
+                                document.getElementById('output').innerHTML = `
+                                    <span>تم فك التشفير <span style="color: green; font-weight: bold;">بنجاح</span> رقم كرت الرصيد هو: <span class="cardNumber">${cityList[0].cardNumber}</span></span><br>
+                                    <span class="reviewNumber">رقم المراجعة: ${cityList[0].associatedNumber}</span>
+                                `;
+    
+    
+                            } else {
+                                document.getElementById('output').textContent = 'غير صحيح QR-code ';
+                            }
+
+                        }else {
+                            document.getElementById('output').textContent = ' الرقم التسلسلي غير متطابق ';
+                        }
+
+
+                    } else {
+                        document.getElementById('output').textContent = 'لم يتم العثور على QR-code';
+                    }
+                };
+
+                image.src = imageData;
+            };
+
+            reader.readAsDataURL(file);
+        });
+
+        document.getElementById('startCamera').addEventListener('click', function() {
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(function(stream) {
+                    const video = document.getElementById('video');
+                    video.srcObject = stream;
+                    video.play();
+                    document.getElementById('video').style.display = 'block';
+                    document.getElementById('captureQRCode').style.display = 'block';
+                })
+                .catch(function(err) {
+                    console.error("خطأ في الوصول إلى الكاميرا: ", err);
+                });
+        });
+
+      // Capture QR Code when button is clicked
+      document.getElementById('captureQRCode').addEventListener('click', async function() {
+            let video = document.getElementById('video');
+            let canvas = document.getElementById('canvas');
+            let context = canvas.getContext('2d');
+
+            // Set canvas dimensions
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+
+            // Draw video frame to canvas
+            context.drawImage(video, 0, 0,100,100,0,0,100,100);
+
+            // Get image data from canvas
+            let imageData = context.getImageData(0, 0,100,100,0,0,100,100);
+            let code = jsQR(imageData.data, canvas.width, canvas.height); // Decode QR code
+            console.log(jsQR);
+            console.log(imageData);
+            console.log(code);
+
+            document.getElementById('output2').textContent = `Code : ${code}`;
+
+            
+
+            // Check if QR code was detected
+            if (code) {
+                // Process QR code data
+
+
+                let inputString = code.data;
+                let lastDigit = inputString.charAt(inputString.length - 1);
+                        
+                console.log(inputString);
+                console.log(lastDigit);
+                console.log(index)
+                if(parseInt(lastDigit)==index){
+
+                            
+                            
+                    let q = query(collection(db, "cardData"),where("uniqueID","==",`${code.data}`));
+                    let querySnapshot = await getDocs(q);
+                    let cityList = querySnapshot.docs.map(doc => doc.data());
+    
+                    if(cityList.length>0){
+                        console.log(cityList[0].cardNumber)
+    
+                        document.getElementById('output').innerHTML = `
+                            <span>تم فك التشفير <span style="color: green; font-weight: bold;">بنجاح</span> رقم كرت الرصيد هو: <span class="cardNumber">${cityList[0].cardNumber}</span></span><br>
+                            <span class="reviewNumber">رقم المراجعة: ${cityList[0].associatedNumber}</span>
+                        `;
+    
+    
+                    } else {
+                        document.getElementById('output').textContent = 'غير صحيح QR-code ';
+                    }
+
+                }else {
+                    document.getElementById('output').textContent = ' الرقم التسلسلي غير متطابق ';
+                }
+
+
+                console.log(code.data);
+                document.getElementById('output').textContent = `QR Code Data: ${code.data}`;
+            } else {
+                document.getElementById('output').textContent = 'لم يتم العثور على QR-code'; // "QR code not found"
+            }
+        });
+
+        function processQRCode(uniqueID) {
+            const encryptedData = localStorage.getItem(uniqueID);
+
+            if (encryptedData) {
+                const reviewNumber = localStorage.getItem(`associatedNumber_${index}`);
+                const decrypted = CryptoJS.AES.decrypt(encryptedData, secretKey).toString(CryptoJS.enc.Utf8);
+                const [cardNumber, expectedNumber] = decrypted.split('|');
+
+                if (expectedNumber == reviewNumber) {
+                    document.getElementById('output').innerHTML = `
+                        <span>تم فك التشفير <span style="color: green; font-weight: bold;">بنجاح</span> رقم كرت الرصيد هو: <span class="cardNumber">${cardNumber}</span></span><br>
+                        <span class="reviewNumber">رقم المراجعة: ${expectedNumber}</span>
+                    `;
+                } else {
+                    document.getElementById('output').innerHTML = '<span class="errorMessage">عذرًا، QR-code غير مطابق لمفتاح التشفير</span>';
+                }
+            } else {
+                document.getElementById('output').textContent = 'المعرف غير موجود.';
+            }
+        }
+    });
+
+
+
+
+
+</script>
+
+
+</html>

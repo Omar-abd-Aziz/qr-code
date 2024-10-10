@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <title>تشفير knlibya</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script>
+    <style>
+        body {
+            background-color: #333;
+            font-family: Arial, sans-serif;
+            color: #f9f9f9;
+            text-align: center;
+            padding: 20px;
+            background-image: url('https://www.transparenttextures.com/patterns/asfalt-light.png');
+        }
+        h1 {
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        #qrFormsContainer {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin: 0 auto;
+            direction: rtl;
+        }
+        .qr-container {
+            margin: 10px;
+            background-color: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(8px);
+            padding: 15px;
+            border-radius: 10px;
+            width: calc(100% - 40px);
+            max-width: 250px;
+            border: 1px solid #FFD700;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        .associatedNumber {
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .serial-number {
+            background-color: #FFD700;
+            color: #000;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        input {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #FFD700;
+            width: calc(100% - 20px);
+            max-width: 250px;
+            background-color: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            font-weight: bold;
+        }
+        #storageTable {
+            margin-top: 20px;
+            border-collapse: collapse;
+            width: 100%;
+        }
+        #storageTable th, #storageTable td {
+            border: 1px solid #FFD700;
+            padding: 10px;
+            text-align: center;
+        }
+        button {
+            background-color: #FFD700;
+            color: #000;
+            border: none;
+            border-radius: 25px;
+            padding: 10px 20px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 10px 0;
+            transition: background-color 0.3s ease;
+            width: calc(100% - 20px);
+            max-width: 250px;
+        }
+        button:hover {
+            background-color: #FFC700;
+        }
+        .decode-button {
+            background-color: #28a745;
+            color: #fff;
+            font-weight: bold;
+        }
+        .decode-button:hover {
+            background-color: #218838;
+        }
+        .search-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            margin: 10px 0;
+        }
+        .search-button, .search-by-index-button {
+            width: calc(50% - 10px);
+            margin: 0 5px;
+        }
+    </style>
+</head>
+<body>
+
+
+    <a class="Orders-Accepted active d-flex align-center fs-14 c-black rad-6 p-10" style="
+    background: #ffd700;
+    cursor: pointer;
+    color: black;
+    padding: 5px 20px;
+    text-align: center;
+    border-radius: 11px;
+    left: 5px;
+    position: absolute;
+    top: 5px;" id="logOut-digital">
+        <span style="font-weight: bold; font-size:20px;">تسجيل الخروج</span>
+        <i class="fas fa-sign-out-alt fa-fw" style="font-weight: bold; font-size:20px; margin-left: 10px; color: white;"></i>
+    </a>
+
+    <h1>KN  تشفير</h1>
+    <button id="toggleQRFormsButton">إظهار/إخفاء الخانات</button>
+    <div id="qrFormsContainer"></div>
+
+    <button id="addEightFieldsButton">إضافة 8 خانات</button>
+
+    <h2>البحث عن البيانات المخزنة</h2>
+    <div class="search-container">
+        <input type="text" id="searchInput" placeholder="بحث برقم المتلازم او برقم الكرت المشفر">
+        <button id="searchButton" class="search-button">بحث برقم متلازم/رقم الكرت</button>
+        <button id="showAllButton" class="search-button">عرض الكل</button>
+        <input type="text" id="indexInput" placeholder="رقم الكرت (1-100)" style="flex: 1; margin: 5px;">
+        <button id="searchByIndexButton" class="search-by-index-button">بحث بالرقم التسلسلي</button>
+    </div>
+
+    <h2>البيانات المخزنة</h2>
+    <table id="storageTable">
+        <thead>
+            <tr>
+                <th>الرقم التسلسلي</th>
+                <th>رقم الكرت</th>
+                <th>رقم المراجعة</th>
+                <th>رمز QR</th>
+                <th>الإجراءات</th>
+            </tr>
+        </thead>
+        <tbody class="mainDataTableBody">
+            <!-- سيتم إضافة البيانات هنا -->
+        </tbody>
+    </table>
+
+    
+</body>
+
+<script src="./js cdn/swalCdn.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/7.7.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/7.7.0/firebase-storage.js"></script>
+<script src="https://www.gstatic.com/firebasejs/7.7.0/firebase-database.js"></script>
+
+<script type="module">
+
+
+  /**/
+  import {docName,getAggregateFromServer,sum,onAuthStateChanged, getAuth, initializeApp,firebaseConfig, getFirestore,getCountFromServer, collection, query, where, getDocs,getDoc, setDoc, updateDoc, addDoc, doc,deleteDoc,onSnapshot,orderBy, limit,startAt,endAt } from './firebase.js';
+
+  firebase.initializeApp(firebaseConfig);
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+
+  const db = getFirestore(app);
+
+  const storage = firebase.storage();
+  /**/
+
+  let X;
+
+  async function getCit(db,X) {
+  const citiesCol = collection(db,`${X}`);
+  const citySnapshot = await getDocs(citiesCol);
+  const cityList = citySnapshot.docs.map(doc => doc.data());
+  return cityList;
+  };
+
+
+
+
+
+/* start return All Orders Accepted */
+
+// let AllOrders;
+
+// async function forAllOrders(X){
+
+//   const q = query(collection(db, "Persons"), where('isAccepted', '==', isAccepted), orderBy("date","desc"), limit(X||5));
+//   const querySnapshot = await getDocs(q);
+//   const cityList = querySnapshot.docs.map(doc => doc.data());
+
+//   AllOrders=cityList;
+
+//   return AllOrders;
+// };
+
+// /* end return All Orders Accepted */
+
+
+//////////////////////////////////////////////////////////////////////////
+
+
+
+/*start login cods*/
+
+
+
+/* 02 start get User Data With Id */
+
+async function getUserDataWithId(id){
+  let userData;
+  await getDoc(doc(db, "accounts", `${id}`)).then(e=>{
+    userData=e.data();
+  });
+  return userData;
+}
+
+
+/* 02 end get User Data With Id */
+
+
+
+/* 03 start check and get user doc */
+
+let mainPersonData;
+let docId = await localStorage.getItem(`${docName}`);
+let AllOrders=[];
+
+
+if(docId!==null&&docId.trim()!==''){
+    // document.querySelector('.profile-btn').dataset.personid=docId;
+    // mainPersonData=await getUserDataWithId(docId);
+    mainPersonData= JSON.parse(localStorage.getItem(`${docName}_personData`));
+
+    // if(mainPersonData.isAdmin==false){
+    //   location.href="./Dashboard-notAdmin.html";
+    // };
+
+
+    onAuthStateChanged(auth,async (user) => {
+      if (user) {
+
+
+
+        console.log(user);
+
+        let q = query(collection(db, "cardData"));
+        let querySnapshot = await getDocs(q);
+        let cityList = querySnapshot.docs.map(doc => doc.data());
+
+        AllOrders=cityList||[];
+        console.log(AllOrders);
+
+        const largestSerialNumber = AllOrders
+        .filter(item => item.serialNumber !== undefined) // Filter items with serialNumber
+        .reduce((max, item) => Math.max(max, item.serialNumber), -Infinity); // Reduce to find the maximum
+
+        console.log(largestSerialNumber);
+
+        while(largestSerialNumber>document.querySelectorAll(".qr-container").length){
+            document.querySelector("#addEightFieldsButton").click();
+        }
+
+
+
+        displayData(AllOrders);
+
+        
+      } else {
+        location.href="./login/login.html"
+      }
+    });
+
+   
+
+
+} else {
+  location.href="./login/login.html"
+}
+
+/* 03 end check and get user doc */
+
+
+
+
+
+        const secretKey = 'مفتاح_سري_يجب_حمايته';
+        let currentCount = 100; // العدد الحالي للخانات
+    
+        function createQRForm(index) {
+            const container = document.createElement('div');
+            container.classList.add('qr-container');
+            container.dataset.id=index + 1;
+
+            const serialNumberDiv = document.createElement('div');
+            serialNumberDiv.classList.add('serial-number');
+            serialNumberDiv.textContent = index + 1;
+            container.appendChild(serialNumberDiv);
+    
+            const inputField = document.createElement('input');
+            inputField.type = 'text';
+            inputField.classList.add('inputNumber');
+            inputField.placeholder = `أدخل رقم الكرت ${index + 1}`;
+            container.appendChild(inputField);
+    
+            const canvas = document.createElement('canvas');
+            canvas.classList.add('qrCanvas');
+            canvas.style.margin = '10px 0';
+            canvas.style.width = '100px';
+            canvas.style.height = '100px';
+            container.appendChild(canvas);
+    
+            const associatedNumberDiv = document.createElement('div');
+            associatedNumberDiv.classList.add('associatedNumber');
+            associatedNumberDiv.id = `associatedNumber_${index+1}`;
+            container.appendChild(associatedNumberDiv);
+    
+            const generateButton = document.createElement('button');
+            generateButton.classList.add('generateQRCode');
+            generateButton.dataset.index = index;
+            generateButton.textContent = 'تشفير إلى QR';
+            generateButton.addEventListener('click', generateQRCode);
+            container.appendChild(generateButton);
+    
+            const decodeButton = document.createElement('button');
+            decodeButton.classList.add('decode-button');
+            decodeButton.id = `decodeLink_${index+1}`;
+            decodeButton.style.display = 'none';
+            decodeButton.textContent = 'فك التشفير';
+            decodeButton.onclick = () => window.open(`decode.html?index=${index+1}`, '_blank');
+            container.appendChild(decodeButton);
+    
+            document.getElementById('qrFormsContainer').appendChild(container);
+        }
+    
+        // إنشاء 100 نموذج ابتدائي
+        for (let i = 0; i < currentCount; i++) {
+            createQRForm(i);
+        }
+    
+        document.getElementById('addEightFieldsButton').addEventListener('click', function() {
+            for (let i = 0; i < 8; i++) {
+                createQRForm(currentCount);
+                currentCount++;
+            }
+        });
+
+
+
+
+
+        // Function to save data to Firestore
+        async function saveQRCodeDataToFirestore(serialNumber, cardNumber, associatedNumber, qrDataURL,uniqueID,encrypted) {
+            try {
+                // Create a reference to the Firestore document (each card entry as a document)
+                const docRef = doc(db, "cardData", `card_${serialNumber}`); // "cardData" is the collection
+
+                // Data to be saved
+                const qrData = {
+                    serialNumber: serialNumber,
+                    cardNumber: cardNumber,
+                    associatedNumber: associatedNumber,
+                    uniqueID :uniqueID,
+                    encrypted: encrypted,
+                    qrCode: qrDataURL, // Storing the QR Code image as base64
+                    timestamp: new Date()
+                };
+
+                // Save the document
+                await setDoc(docRef, qrData);
+                console.log("Data successfully saved!");
+                AllOrders.push(qrData);
+                displayData(AllOrders)
+
+                Swal.fire("تم التشفير والحفظ","","success");
+
+
+            } catch (error) {
+                console.error("Error saving data: ", error);
+            }
+        }
+
+        // Example usage within your generateQRCode function
+        function generateQRCode(event) {
+
+
+
+   
+
+            const index = event.target.dataset.index;
+            const inputField = document.querySelectorAll('.inputNumber')[index];
+            const input = inputField.value.trim();
+
+            if (input === '') {
+                alert(`يرجى إدخال رقم الكرت في النموذج ${parseInt(index) + 1}`);
+                return;
+            }
+
+            Swal.fire({
+                title: 'Please Wait!',
+                didOpen: () => {
+                Swal.showLoading()
+                }
+            });
+
+            event.target.disabled = true;
+            event.target.textContent = 'تم إنشاء QR';
+
+            const associatedNumber = Math.floor(Math.random() * 100000);
+            const uniqueID = 'QR_' + Date.now() + '_' + (Number(index)+1);
+            const encrypted = CryptoJS.AES.encrypt(input + '|' + associatedNumber, secretKey).toString();
+
+            console.log(associatedNumber)
+            console.log(uniqueID)
+            console.log(encrypted)
+
+            // localStorage.setItem(uniqueID, encrypted);
+            // localStorage.setItem(`associatedNumber_${index}`, associatedNumber);
+
+            const qrCanvas = document.querySelectorAll('.qrCanvas')[index];
+            const qr = new QRious({
+                element: qrCanvas,
+                value: uniqueID
+            });
+
+            document.getElementById(`associatedNumber_${index}`).textContent = `رقم متلازم: ${associatedNumber}`;
+            document.getElementById(`decodeLink_${index}`).style.display = 'block';
+
+            const qrDataURL = qr.toDataURL();
+            addDataToTable(parseInt(index) + 1, input, associatedNumber, qrDataURL);
+
+            // Save to Firestore
+            saveQRCodeDataToFirestore(parseInt(index) + 1, input, associatedNumber, qrDataURL,uniqueID,encrypted);
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+     
+        function addDataToTable(serialNumber, cardNumber, associatedNumber, qrDataURL) {
+            const table = document.querySelector('#storageTable tbody');
+            const row = document.createElement('tr');
+            row.dataset.index = serialNumber - 1;
+    
+            row.innerHTML = `
+                <td>${serialNumber}</td>
+                <td>${cardNumber}</td>
+                <td>${associatedNumber}</td>
+                <td><img src="${qrDataURL}" alt="QR Code" width="100"></td>
+                <td>
+                    <button class="decode-button" onclick="window.open('decode.html?index=${serialNumber - 1}', '_blank')">فك التشفير</button>
+                    <button class="copyLink" data-index="${serialNumber - 1}">نسخ رابط فك التشفير</button>
+                </td>
+            `;
+    
+            table.appendChild(row);
+            sortTable();
+        }
+    
+        function sortTable() {
+            const table = document.querySelector('#storageTable tbody');
+            const rows = Array.from(table.rows);
+            rows.sort((a, b) => parseInt(b.cells[0].textContent) - parseInt(a.cells[0].textContent));
+            rows.forEach(row => table.appendChild(row));
+        }
+    
+        document.getElementById('searchButton').addEventListener('click', function() {
+            const searchTerm = document.getElementById('searchInput').value.trim();
+            document.querySelectorAll('#storageTable tbody tr').forEach(row => {
+                const associatedNumber = row.cells[2].textContent;
+                const cardNumber = row.cells[1].textContent;
+                const serialNumber = row.cells[0].textContent;
+    
+                if (associatedNumber === searchTerm || cardNumber === searchTerm || serialNumber === searchTerm) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+    
+        document.getElementById('showAllButton').addEventListener('click', function() {
+            document.querySelectorAll('#storageTable tbody tr').forEach(row => row.style.display = '');
+            document.getElementById('searchInput').value = ''; // تنظيف حقل البحث
+        });
+    
+        document.getElementById('searchInput').addEventListener('input', function() {
+            if (this.value.trim() === '') {
+                document.querySelectorAll('#storageTable tbody tr').forEach(row => row.style.display = '');
+            }
+        });
+    
+        document.getElementById('searchByIndexButton').addEventListener('click', function() {
+            const index = parseInt(document.getElementById('indexInput').value.trim());
+            document.querySelectorAll('#storageTable tbody tr').forEach(row => row.style.display = 'none');
+            if (index >= 0 && index < currentCount) {
+                document.querySelector(`#storageTable tbody tr[data-index="${index}"]`).style.display = '';
+            }
+        });
+    
+        document.getElementById('toggleQRFormsButton').addEventListener('click', function() {
+            const qrFormsContainer = document.getElementById('qrFormsContainer');
+            qrFormsContainer.style.display = qrFormsContainer.style.display === 'none' ? '' : 'none';
+        });
+
+
+
+
+
+        function displayData(dataArray) {
+
+        dataArray.sort((a, b) => a.serialNumber - b.serialNumber);
+
+
+         document.querySelector(".mainDataTableBody").innerHTML=``;
+            dataArray.forEach(item => {
+
+                let cardDiv = document.querySelector(`[data-id="${item.serialNumber}"]`);
+
+                const img = new Image();
+        
+                // Set the source of the image
+                img.src = item.qrCode; // Replace with your image URL
+
+                // Get the canvas element
+                let canvas =  cardDiv.querySelector(".qrCanvas");
+ 
+                let ctx = canvas.getContext('2d');
+
+                // Draw the image onto the canvas once it has loaded
+                img.onload = function() {
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height); // Draw image at (0,0)
+                };
+
+                cardDiv.querySelector(".associatedNumber").textContent=`رقم متلازم: ${item.associatedNumber}`;
+                cardDiv.querySelector(".inputNumber").style.display="none";
+                cardDiv.querySelector(".generateQRCode").style.display="none";
+                cardDiv.querySelector(".decode-button").style.display="block";
+
+
+
+                document.querySelector(".mainDataTableBody").innerHTML+=`
+                <tr data-index="${item.serialNumber}">
+                    <td>${item.serialNumber}</td>
+                    <td>${item.associatedNumber}</td>
+                    <td>${item.cardNumber}</td>
+                    <td><img src="${item.qrCode}" alt="QR Code" width="100"></td>
+                    <td>
+                        <button class="decode-button" onclick="window.open('./decode.html?index=${item.serialNumber}', '_blank')">فك التشفير</button>
+                        <button class="copyLink" data-index="${item.serialNumber}">نسخ رابط فك التشفير</button>
+                    </td>
+                </tr>
+
+                `;
+
+
+
+
+
+             
+            });
+        }
+
+
+
+
+
+
+
+
+
+document.querySelector("#logOut-digital").addEventListener("click",async ()=>{
+    localStorage.setItem(docName,"");
+    location.href="./login/login.html";
+
+});
+
+
+
+window.addEventListener("click",e=>{
+
+    if([...e.target.classList].includes("copyLink")){
+    
+        let index=e.target.dataset.index;
+
+    
+        let x = document.createElement('textarea');
+        x.value=location.origin+"?index="+index;
+        document.body.appendChild(x)
+        x.select()
+        x.setSelectionRange(0,99999);
+        document.execCommand("copy");
+        document.body.removeChild(x);
+    
+        Swal.fire("تم النسخ","","success");
+    
+    };
+
+
+})
+
+
+
+
+</script>
+</html>
