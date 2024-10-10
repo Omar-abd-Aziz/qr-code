@@ -221,10 +221,10 @@
             canvas.height = video.videoHeight;
 
             // Draw video frame to canvas
-            context.drawImage(video, 0, 0,100,100,0,0,100,100);
+            context.drawImage(video, 0, 0,canvas.width, canvas.height);
 
             // Get image data from canvas
-            let imageData = context.getImageData(0, 0,100,100,0,0,100,100);
+            let imageData = context.getImageData(0, 0,canvas.width, canvas.height);
             let code = jsQR(imageData.data, canvas.width, canvas.height); // Decode QR code
             console.log(jsQR);
             console.log(imageData);
