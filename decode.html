@@ -7,6 +7,7 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
@@ -62,9 +63,21 @@
             font-weight: bold;
             margin-top: 12px;
         }
+
+        #video {
+            width: 100%;
+            height: auto;
+            display: none;
+        }
+
+        #qrCodeOutput {
+            font-size: 18px;
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
+
     <h1>KN مفتاح فك التشفير لكرت الحساب البنكي الالكتروني</h1>
     <div>
         <p id="serialNumber"></p>
@@ -72,12 +85,25 @@
         <bdi>لفك التشفير، امسح QR كود بالكاميرا أو قم برفع صورته.</bdi>
         <button id="uploadButton">للكرت المراد فك تشفيره QR-code رفع صورة</button>
         <button id="startCamera">بالكاميرا QR-code مسح</button>
-        <video id="video" style="display:none;"></video>
-        <canvas id="canvas" style="display:none;"></canvas>
-        <button id="captureQRCode" style="display:none;">بالكاميرا QR-code التقاط</button>
+
+        <div class="cameraBtns" style="display: none;">
+        
+            <!-- Video Element -->
+            <video id="video" style="width: 500px; margin: auto;"></video>
+            
+            <!-- Canvas Element (hidden, used for processing video frames) -->
+            <canvas id="canvas" style="display: none;"></canvas>
+            
+            <!-- QR Code Output -->
+            <p id="qrCodeOutput"> </p>
+    
+        </div>
+
         <p id="output"></p>
         <p id="output2"></p>
     </div>
+
+
 
     
 </body>
@@ -86,6 +112,7 @@
     
 <script src="./js cdn/swalCdn.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 
 <script src="https://www.gstatic.com/firebasejs/7.7.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/7.7.0/firebase-storage.js"></script>
@@ -98,20 +125,20 @@
   import {docName,getAggregateFromServer,sum,onAuthStateChanged, getAuth, initializeApp,firebaseConfig, getFirestore,getCountFromServer, collection, query, where, getDocs,getDoc, setDoc, updateDoc, addDoc, doc,deleteDoc,onSnapshot,orderBy, limit,startAt,endAt } from './firebase.js';
 
   firebase.initializeApp(firebaseConfig);
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
+  let app = initializeApp(firebaseConfig);
+  let auth = getAuth(app);
 
-  const db = getFirestore(app);
+  let db = getFirestore(app);
 
-  const storage = firebase.storage();
+  let storage = firebase.storage();
   /**/
 
   let X;
 
   async function getCit(db,X) {
-  const citiesCol = collection(db,`${X}`);
-  const citySnapshot = await getDocs(citiesCol);
-  const cityList = citySnapshot.docs.map(doc => doc.data());
+  let citiesCol = collection(db,`${X}`);
+  let citySnapshot = await getDocs(citiesCol);
+  let cityList = citySnapshot.docs.map(doc => doc.data());
   return cityList;
   };
 
@@ -119,12 +146,12 @@
 
 
 
-  const secretKey = 'مفتاح_سري_يجب_حمايته';
+  let secretKey = 'مفتاح_سري_يجب_حمايته';
     
     document.addEventListener('DOMContentLoaded', function() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const index = urlParams.get('index');
-        const serialNumber = parseInt(index);
+        let urlParams = new URLSearchParams(window.location.search);
+        let index = urlParams.get('index');
+        let serialNumber = parseInt(index);
 
         document.getElementById('serialNumber').textContent = `الرقم التسلسلي: ${serialNumber}`;
 
@@ -133,21 +160,21 @@
         });
 
         document.getElementById('uploadQRCode').addEventListener('change', function() {
-            const file = this.files[0];
-            const reader = new FileReader();
+            let file = this.files[0];
+            let reader = new FileReader();
 
             reader.onload = function(e) {
-                const imageData = e.target.result;
-                const image = new Image();
+                let imageData = e.target.result;
+                let image = new Image();
 
                 image.onload = async function() {
-                    const canvas = document.createElement('canvas');
+                    let canvas = document.createElement('canvas');
                     canvas.width = image.width;
                     canvas.height = image.height;
-                    const context = canvas.getContext('2d');
+                    let context = canvas.getContext('2d');
                     context.drawImage(image, 0, 0,100,100,0,0,100,100);
-                    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-                    const code = jsQR(imageData.data, canvas.width, canvas.height);
+                    let imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                    let code = jsQR(imageData.data, canvas.width, canvas.height);
 
 
                     if (code) {
@@ -197,56 +224,156 @@
             reader.readAsDataURL(file);
         });
 
+
+
+
+
+
+
+
+
+
         document.getElementById('startCamera').addEventListener('click', function() {
-            navigator.mediaDevices.getUserMedia({ video: true })
-                .then(function(stream) {
-                    const video = document.getElementById('video');
+            // Get a list of media devices (cameras, microphones, etc.)
+            navigator.mediaDevices.enumerateDevices().then(function(devices) {
+                // Filter for video input devices (cameras)
+                let videoDevices = devices.filter(device => device.kind === 'videoinput');
+
+                // Select the secondary camera (for example, the rear camera on mobile)
+                let cameraId = videoDevices.length > 1 ? videoDevices[1].deviceId : videoDevices[0].deviceId;
+
+                // Request access to the chosen camera
+                navigator.mediaDevices.getUserMedia({
+                    video: { deviceId: { exact: cameraId } }
+                }).then(function(stream) {
+                    let video = document.getElementById('video');
                     video.srcObject = stream;
                     video.play();
                     document.getElementById('video').style.display = 'block';
-                    document.getElementById('captureQRCode').style.display = 'block';
-                })
-                .catch(function(err) {
-                    console.error("خطأ في الوصول إلى الكاميرا: ", err);
+                    document.querySelector('.cameraBtns').style.display = 'block';
+                }).catch(function(err) {
+                    console.error("Error accessing the camera: ", err);
                 });
+            }).catch(function(err) {
+                console.error("Error enumerating devices: ", err);
+            });
         });
 
-      // Capture QR Code when button is clicked
-      document.getElementById('captureQRCode').addEventListener('click', async function() {
-            let video = document.getElementById('video');
-            let canvas = document.getElementById('canvas');
-            let context = canvas.getContext('2d');
 
-            // Set canvas dimensions
+
+
+
+
+
+
+
+
+        function processQRCode(uniqueID) {
+            let encryptedData = localStorage.getItem(uniqueID);
+
+            if (encryptedData) {
+                let reviewNumber = localStorage.getItem(`associatedNumber_${index}`);
+                let decrypted = CryptoJS.AES.decrypt(encryptedData, secretKey).toString(CryptoJS.enc.Utf8);
+                let [cardNumber, expectedNumber] = decrypted.split('|');
+
+                if (expectedNumber == reviewNumber) {
+                    document.getElementById('output').innerHTML = `
+                        <span>تم فك التشفير <span style="color: green; font-weight: bold;">بنجاح</span> رقم كرت الرصيد هو: <span class="cardNumber">${cardNumber}</span></span><br>
+                        <span class="reviewNumber">رقم المراجعة: ${expectedNumber}</span>
+                    `;
+                } else {
+                    document.getElementById('output').innerHTML = '<span class="errorMessage">عذرًا، QR-code غير مطابق لمفتاح التشفير</span>';
+                }
+            } else {
+                document.getElementById('output').textContent = 'المعرف غير موجود.';
+            }
+        }
+    });
+
+document.getElementById('startCamera').addEventListener('click', function() {
+    // Get a list of media devices (cameras)
+    navigator.mediaDevices.enumerateDevices().then(function(devices) {
+        let videoDevices = devices.filter(device => device.kind === 'videoinput');
+        let cameraId = videoDevices.length > 1 ? videoDevices[1].deviceId : videoDevices[0].deviceId;
+
+        // Access the camera
+        navigator.mediaDevices.getUserMedia({
+            video: { deviceId: { exact: cameraId } }
+        }).then(function(stream) {
+            let video = document.getElementById('video');
+            video.srcObject = stream;
+            video.play();
+            video.style.display = 'block';
+
+            // Start scanning the video stream and pass the stream to be able to stop it later
+            scanQRCode(stream);
+        }).catch(function(err) {
+            console.error("Error accessing the camera: ", err);
+        });
+    }).catch(function(err) {
+        console.error("Error enumerating devices: ", err);
+    });
+});
+
+
+let videoStream; // Variable to hold the video stream
+
+function scanQRCode(stream) {
+
+    videoStream= stream; // Variable to hold the video stream
+
+    let video = document.getElementById('video');
+    let canvas = document.getElementById('canvas');
+    let context = canvas.getContext('2d');
+    let qrCodeOutput = document.getElementById('qrCodeOutput');
+    let scanning = true; // Flag to control the scanning loop
+
+    async  function drawAndScan() {
+        if (!scanning) {
+            return; // Stop the loop if scanning is set to false
+        }
+
+        if (video.readyState === video.HAVE_ENOUGH_DATA) {
+            // Set canvas dimensions to match the video stream
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
 
-            // Draw video frame to canvas
-            context.drawImage(video, 0, 0,canvas.width, canvas.height);
+            // Draw the video frame onto the canvas
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-            // Get image data from canvas
-            let imageData = context.getImageData(0, 0,canvas.width, canvas.height);
-            let code = jsQR(imageData.data, canvas.width, canvas.height); // Decode QR code
-            console.log(jsQR);
-            console.log(imageData);
-            console.log(code);
+            // Extract image data from the canvas
+            let imageData = context.getImageData(0, 0, canvas.width, canvas.height);
 
-            document.getElementById('output2').textContent = `Code : ${code}`;
+            // Scan for a QR code
+            let code = jsQR(imageData.data, imageData.width, imageData.height);
 
-            
-
-            // Check if QR code was detected
             if (code) {
-                // Process QR code data
+                // Stop the video stream
+                stream.getTracks().forEach(track => track.stop());
+                stopCamera();
+                // Hide the video element
+                video.style.display = 'none';
 
+                // Output the QR code value
+              
+                console.log("QR Code found: ", code.data);
 
-                let inputString = code.data;
-                let lastDigit = inputString.charAt(inputString.length - 1);
-                        
-                console.log(inputString);
-                console.log(lastDigit);
-                console.log(index)
-                if(parseInt(lastDigit)==index){
+                // Stop the scanning loop
+                scanning = false;
+                
+
+                
+                let inputString = code.data; // QR_1728593203358_10
+                let parts = inputString.split('_'); // Split the string by underscore
+                let lastPart = parts[parts.length - 1]; // Get the last part which should be '10'
+
+                console.log(inputString); // QR_1728593203358_10
+                console.log(lastPart); // 10
+                let urlParamss = new URLSearchParams(window.location.search);
+                let indexx = urlParamss.get('index');
+                indexx = parseInt(indexx);
+                console.log(indexx)
+                if(parseInt(lastPart)==indexx){
 
                             
                             
@@ -272,37 +399,32 @@
                 }
 
 
-                console.log(code.data);
-                document.getElementById('output').textContent = `QR Code Data: ${code.data}`;
-            } else {
-                document.getElementById('output').textContent = 'لم يتم العثور على QR-code'; // "QR code not found"
-            }
-        });
 
-        function processQRCode(uniqueID) {
-            const encryptedData = localStorage.getItem(uniqueID);
+            
+            
 
-            if (encryptedData) {
-                const reviewNumber = localStorage.getItem(`associatedNumber_${index}`);
-                const decrypted = CryptoJS.AES.decrypt(encryptedData, secretKey).toString(CryptoJS.enc.Utf8);
-                const [cardNumber, expectedNumber] = decrypted.split('|');
-
-                if (expectedNumber == reviewNumber) {
-                    document.getElementById('output').innerHTML = `
-                        <span>تم فك التشفير <span style="color: green; font-weight: bold;">بنجاح</span> رقم كرت الرصيد هو: <span class="cardNumber">${cardNumber}</span></span><br>
-                        <span class="reviewNumber">رقم المراجعة: ${expectedNumber}</span>
-                    `;
-                } else {
-                    document.getElementById('output').innerHTML = '<span class="errorMessage">عذرًا، QR-code غير مطابق لمفتاح التشفير</span>';
-                }
-            } else {
-                document.getElementById('output').textContent = 'المعرف غير موجود.';
             }
         }
-    });
+
+        // Continue scanning
+        if (scanning) {
+            requestAnimationFrame(drawAndScan);
+        }
+    }
+
+    // Start the loop for scanning
+    drawAndScan();
+}
 
 
 
+// Function to stop the camera
+function stopCamera() {
+    if (videoStream) {
+        videoStream.getTracks().forEach(track => track.stop());
+        videoStream = null; // Clear the stream variable
+    }
+}
 
 
 </script>
